@@ -34,6 +34,17 @@
 
         </div>
     </div>
+    <div class="row">
+        <div class="col-xs-3">
+            <label for="">Get 10 cheapest products:</label>
+        </div>
+        <div class="col-xs-3">
+            <button type="submit" class="btn btn-info get10CheapestProducts"> Submit</button>
+        </div>
+        <div class="col-xs-3 get10CheapestProductsResult">
+
+        </div>
+    </div>
 </div>
 
 <script>
@@ -80,6 +91,19 @@
             },
             error: function(error){
                 $('.getProductsByStoreIdResult').text(error.responseText)
+            }
+        })
+    })
+    $('.get10CheapestProducts').on('click', function (e) {
+        e.preventDefault()
+        $.ajax({
+            type: 'get',
+            url: '/10CheapestProducts',
+            success: function(message){
+                $('.get10CheapestProductsResult').text(JSON.stringify(message))
+            },
+            error: function(error){
+                $('.get10CheapestProductsResult').text(error.responseText)
             }
         })
     })

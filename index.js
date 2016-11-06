@@ -57,6 +57,17 @@ MongoClient.connect(url, function (err, db) {
             })
         })
     }
+    
+    function get10CheapestProducts(callback){
+        db.collection('products', function (err, products) {
+            products.find().toArray(function (err, allProducts) {
+                var productsSortedByPrice = allProducts.sort(function(product1, product2){
+                    return product1.price > product2.price
+                })
+                callback(200, productsSortedByPrice.slice(0,10))
+            })
+        })
+    }
     app.get('/productById', function (req, res) {
         getProductById(req.query.id, function (status, param) {
             res.status(status).send(param)
@@ -65,6 +76,12 @@ MongoClient.connect(url, function (err, db) {
 
     app.get('/productsByStoreId', function (req, res) {
         getProductsByStoreId(req.query.store_id, function (status, param) {
+            res.status(status).send(param)
+        })
+    })
+
+    app.get('/10CheapestProducts', function(req, res){
+        get10CheapestProducts(function(status, param){
             res.status(status).send(param)
         })
     })
