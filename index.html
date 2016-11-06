@@ -1,0 +1,88 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-3">
+            <label for="">Get product by id:</label>
+        </div>
+        <div class="col-xs-3">
+            <input type="text" placeholder="Insert id here" class="getProductByIdInput">
+        </div>
+        <div class="col-xs-3">
+            <button type="submit" class="btn btn-info getProductByIdBtn"> Submit</button>
+        </div>
+        <div class="col-xs-3 getProductByIdResult">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-3">
+            <label for="">Get products by store_id:</label>
+        </div>
+        <div class="col-xs-3">
+            <input type="text" placeholder="Insert store_id here" class="getProductsByStoreIdInput">
+        </div>
+        <div class="col-xs-3">
+            <button type="submit" class="btn btn-info getProductsByStoreIdBtn"> Submit</button>
+        </div>
+        <div class="col-xs-3 getProductsByStoreIdResult">
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function getAuthToken(){
+        var auth_token = document.cookie.split(';')
+                .map(function (cookie) {
+                    var cookieName = cookie.split('=')[0].trim(), cookieValue = cookie.split('=')[1].trim()
+                    if (cookieName === 'auth_token') {
+                        return cookieValue
+                    }
+                }).filter(function (cookieValue) {
+                    return !!cookieValue
+                })[0]
+        return auth_token
+    }
+
+    document.cookie = 'auth_token=some_authentication_cookie'
+
+    $('.getProductByIdBtn').on('click', function (e) {
+        e.preventDefault()
+        var id = $('.getProductByIdInput').val()
+        $.ajax({
+            type: 'get',
+            url: '/productById?id=' + id,
+            contentType: 'application/json',
+            success: function(message){
+                $('.getProductByIdResult').text(JSON.stringify(message))
+            },
+            error: function(error){
+                $('.getProductByIdResult').text(error.responseText)
+            }
+        })
+    })
+
+    $('.getProductsByStoreIdBtn').on('click', function (e) {
+        e.preventDefault()
+        var store_id = $('.getProductsByStoreIdInput').val()
+        $.ajax({
+            type: 'get',
+            url: '/productsByStoreId?store_id=' +  store_id,
+            contentType: 'application/json',
+            success: function(message){
+                $('.getProductsByStoreIdResult').text(JSON.stringify(message))
+            },
+            error: function(error){
+                $('.getProductsByStoreIdResult').text(error.responseText)
+            }
+        })
+    })
+</script>
+</body>
+</html>
