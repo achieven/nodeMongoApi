@@ -1,4 +1,4 @@
-To run app:
+To run app:    
 clone this repository    
 cd nodeMongoApi    
 npm i --production    
