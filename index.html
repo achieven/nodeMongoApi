@@ -65,20 +65,6 @@
 </div>
 
 <script>
-    function getAuthToken() {
-        var auth_token = document.cookie.split(';')
-                .map(function (cookie) {
-                    var cookieName = cookie.split('=')[0].trim(), cookieValue = cookie.split('=')[1].trim()
-                    if (cookieName === 'auth_token') {
-                        return cookieValue
-                    }
-                }).filter(function (cookieValue) {
-                    return !!cookieValue
-                })[0]
-        return auth_token
-    }
-
-    document.cookie = 'auth_token=some_authentication_cookie'
 
     $('.getProductByIdBtn').on('click', function (e) {
         e.preventDefault()

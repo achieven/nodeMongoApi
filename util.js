@@ -9,7 +9,7 @@ module.exports = {
                     callback(200, chosenProductArray[0])
                 }
                 else if (chosenProductArray.length === 0) {
-                    callback(204, 'No product with such id')
+                    callback(200, [])
                 }
                 else {
                     callback(500, 'some problem occured')
@@ -23,15 +23,7 @@ module.exports = {
                 var chosenProductsArray = allProducts.filter(function (product) {
                     return product.store_id == store_id
                 })
-                if (chosenProductsArray.length > 0) {
-                    callback(200, chosenProductsArray)
-                }
-                else if (chosenProductsArray.length === 0) {
-                    callback(204, 'No products with such store_id')
-                }
-                else {
-                    callback(500, 'some problem occured')
-                }
+                callback(200, chosenProductsArray)
             })
         })
     },
@@ -66,14 +58,16 @@ module.exports = {
                             return false
                     }
                 })
-                if (productsByTitle.length === 0) {
-                    callback(204, 'No products with such title')
-                }
-                else if (productsByTitle.length > 0) {
-                    callback(200, productsByTitle)
-                }
+                callback(200, productsByTitle)
 
             })
         })
+    },
+    verifyAuthCookie: function(cookies){
+        const auth_token = 'some_authentication_cookie'
+        if(cookies && cookies.auth_token === auth_token){
+            return true
+        }
+        return false
     }
 }

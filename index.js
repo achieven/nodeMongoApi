@@ -6,6 +6,7 @@ MongoClient.connect(url, function (err, db) {
     var cookieParser = require('cookie-parser'),
         bodyParser = require('body-parser'),
         fs = require('fs'),
+        Handlebars = require('handlebars')
         util = require('./util')
     var app = express()
     app.use(cookieParser())
@@ -17,30 +18,51 @@ MongoClient.connect(url, function (err, db) {
 
     app.get('/', function (req, res) {
         var html = fs.readFileSync('./index.html', 'utf8')
+        res.setHeader('Set-Cookie', 'auth_token=some_authentication_cookie');
         res.send(html)
     })
     
     app.get('/productById', function (req, res) {
-        util.getProductById(db, req.query.id, function (status, param) {
-            res.status(status).send(param)
-        })
+        if(util.verifyAuthCookie(req.cookies)){
+            util.getProductById(db, req.query.id, function (status, param) {
+                res.status(status).send(param)
+            })
+        }
+        else {
+            res.status(403).send('You dont have auth_token')
+        }
     })
 
     app.get('/productsByStoreId', function (req, res) {
-        util.getProductsByStoreId(db, req.query.store_id, function (status, param) {
-            res.status(status).send(param)
-        })
+        if(util.verifyAuthCookie(req.cookies)) {
+            util.getProductsByStoreId(db, req.query.store_id, function (status, param) {
+                res.status(status).send(param)
+            })
+        }
+        else {
+            res.status(403).send('You dont have auth_token')
+        }
     })
 
     app.get('/10CheapestProducts', function(req, res){
-        util.get10CheapestProducts(db, function(status, param){
-            res.status(status).send(param)
-        })
+        if(util.verifyAuthCookie(req.cookies)) {
+            util.get10CheapestProducts(db, function (status, param) {
+                res.status(status).send(param)
+            })
+        }
+        else {
+            res.status(403).send('You dont have auth_token')
+        }
     })
     app.get('/productsByTitle', function(req, res){
-        util.getProductsByTitle(db, req.query.title, req.query.partialOrExact, function(status, param){
-            res.status(status).send(param)
-        })
+        if(util.verifyAuthCookie(req.cookies)) {
+            util.getProductsByTitle(db, req.query.title, req.query.partialOrExact, function (status, param) {
+                res.status(status).send(param)
+            })
+        }
+        else {
+            res.status(403).send('You dont have auth_token')
+        }
     })
 
 });

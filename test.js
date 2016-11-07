@@ -6,31 +6,31 @@ var ObjectID = mongodb.ObjectID
 
 var url = 'mongodb://localhost:27017/test';
 describe('getProductById', function () {
-    it('should return status 204 when no product with such id exists', function (done) {
+    it('should return status 200 when no product with such id exists', function (done) {
         MongoClient.connect(url, function (err, db) {
             util.getProductById(db, 'some id that doesnt exist', function (status, param) {
-                expect(status).to.be.equal(204)
-                expect(param).to.be.equal('No product with such id')
+                expect(status).to.be.equal(200)
+                expect(param.length).to.be.equal(0)
                 db.close()
                 done()
             })
         })
     })
-    it('should return status 204 when ObjectID(id) equals the id in the database or ObjectID(id in database) equals id but ObjectID(id) not equals id', function (done) {
+    it('should return status 200 when ObjectID(id) equals the id in the database or ObjectID(id in database) equals id but ObjectID(id) not equals id', function (done) {
         MongoClient.connect(url, function (err, db) {
             db.collection('products', function (err, products) {
                 var objId = ObjectID(1234)
                 products.insert({_id: objId, name: 'some name'})
                 util.getProductById(db, 1234, function (status, param) {
-                    expect(status).to.be.equal(204)
-                    expect(param).to.be.equal('No product with such id')
+                    expect(status).to.be.equal(200)
+                    expect(param.length).to.be.equal(0)
                     products.remove({_id: objId, name: 'some name'})
 
 
                     products.insert({_id: 1234, name: 'some name'})
                     util.getProductById(db, ObjectID(1234), function (status, param) {
-                        expect(status).to.be.equal(204)
-                        expect(param).to.be.equal('No product with such id')
+                        expect(status).to.be.equal(200)
+                        expect(param.length).to.be.equal(0)
                         products.remove({_id: 1234, name: 'some name'})
                         db.close()
                         done()
@@ -79,11 +79,11 @@ describe('getProductById', function () {
 })
 
 describe('getProductsByStoreId', function () {
-    it('should return status 204 when no products with such store_id exist', function (done) {
+    it('should return status 200 when no products with such store_id exist', function (done) {
         MongoClient.connect(url, function (err, db) {
             util.getProductsByStoreId(db, 'store_id that doesnt exist', function (status, param) {
-                expect(status).to.be.equal(204)
-                expect(param).to.be.equal('No products with such store_id')
+                expect(status).to.be.equal(200)
+                expect(param.length).to.be.equal(0)
                 done()
             })
         })
@@ -189,7 +189,7 @@ describe('get10CheapestProducts', function () {
                 products.insert({price: 1, shipping: '7'})
                 products.insert({price: 2, shipping: '8'})
                 products.insert({price: '3', shipping: 9})
-                products.insert({price: 6,  shipping: 0})
+                products.insert({price: 6, shipping: 0})
                 products.insert({price: 4, shipping: '3'})
                 products.insert({price: '5'})
                 products.insert({price: '7', shipping: Symbol()})
@@ -220,7 +220,7 @@ describe('get10CheapestProducts', function () {
                     products.remove({price: 1, shipping: '7'})
                     products.remove({price: 2, shipping: '8'})
                     products.remove({price: '3', shipping: 9})
-                    products.remove({price: 6,  shipping: 0})
+                    products.remove({price: 6, shipping: 0})
                     products.remove({price: 4, shipping: '3'})
                     products.remove({price: '5'})
                     products.remove({price: '7', shipping: Symbol()})
@@ -239,20 +239,20 @@ describe('get10CheapestProducts', function () {
 })
 
 describe('getProductsByTitle', function () {
-    it('should return status 204 when no products with such title exist, exact or partial', function (done) {
+    it('should return status 200 when no products with such title exist, exact or partial', function (done) {
         MongoClient.connect(url, function (err, db) {
             util.getProductsByTitle(db, 'some title that doesnt exist exact or partial', 'exact', function (status, param) {
-                expect(status).to.be.equal(204)
-                expect(param).to.be.equal('No products with such title')
+                expect(status).to.be.equal(200)
+                expect(param.length).to.be.equal(0)
                 util.getProductsByTitle(db, 'some title that doesnt exist exact or partial', 'partial', function (status, param) {
-                    expect(status).to.be.equal(204)
-                    expect(param).to.be.equal('No products with such title')
+                    expect(status).to.be.equal(200)
+                    expect(param.length).to.be.equal(0)
                     done()
                 })
             })
         })
     })
-    it('should return status 400 when "partial" or "exact" are not specified correctly', function(done){
+    it('should return status 400 when "partial" or "exact" are not specified correctly', function (done) {
         MongoClient.connect(url, function (err, db) {
             db.collection('products', function (err, products) {
                 products.insert({title: 'hello'})
@@ -311,6 +311,45 @@ describe('getProductsByTitle', function () {
         })
     })
 
+    it('should return every product that has any title when the requested title is "" and user requested partial match', function (done) {
+        MongoClient.connect(url, function (err, db) {
+            db.collection('products', function (err, products) {
+                products.insert({title: 'hello'})
+                products.insert({title: 'hello world'})
+                products.insert({title: 'hello '})
+                products.insert({title: 'hell'})
+                products.insert({title: undefined})
+                util.getProductsByTitle(db, '', 'partial', function (status, param) {
+                    expect(status).to.be.equal(200)
+                    expect(param.length).to.be.equal(4)
+                    expect(param[0].title).to.be.equal('hello')
+                    expect(param[1].title).to.be.equal('hello world')
+                    expect(param[2].title).to.be.equal('hello ')
+                    expect(param[3].title).to.be.equal('hell')
+                    products.remove({title: 'hello'})
+                    products.remove({title: 'hello world'})
+                    products.remove({title: 'hello '})
+                    products.remove({title: 'hell'})
+                    products.remove({title: undefined})
+                    done()
+                })
+            })
+        })
+    })
+})
 
+describe('verifyAuthToken', function(){
+    it('should return false if cookies dont have token or is not identical to auth_token', function(){
+        var ans = util.verifyAuthCookie()
+        expect(ans).to.be.false
+        ans = util.verifyAuthCookie({})
+        expect(ans).to.be.false
+        ans = util.verifyAuthCookie({auth_token: "some not true token"})
+        expect(ans).to.be.false
+    })
+    it('should return true if cookies have the needed token', function(){
+        var ans = util.verifyAuthCookie({auth_token: "some_authentication_cookie"})
+        expect(ans).to.be.true
+    })
 })
 
