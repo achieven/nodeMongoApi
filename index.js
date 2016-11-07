@@ -1,12 +1,12 @@
 var MongoClient = require('mongodb').MongoClient
 var url = 'mongodb://localhost:27017/production';
+var sha256 = require('js-sha256').sha256
 MongoClient.connect(url, function (err, db) {
 
     var express = require('express')
     var cookieParser = require('cookie-parser'),
         bodyParser = require('body-parser'),
         fs = require('fs'),
-        Handlebars = require('handlebars'),
         crypto = require('crypto'),
         util = require('./util')
     var app = express()
@@ -24,21 +24,16 @@ MongoClient.connect(url, function (err, db) {
                 if (auth_token.length === 0) {
                     crypto.randomBytes(48, function (err, buffer) {
                         var token = buffer.toString('hex');
-                        tokens.insert({auth_token: token})
+                        tokens.insert({auth_token: sha256(token)})
                         res.setHeader('Set-Cookie', 'auth_token=' + token);
                         res.send(html)
                     });
                 }
                 else {
-                    res.setHeader('Set-Cookie', 'auth_token=' + auth_token[0].auth_token);
                     res.send(html) 
                 }
-
             })
-
         })
-
-
     })
 
     app.get('/productById', function (req, res) {
@@ -49,7 +44,7 @@ MongoClient.connect(url, function (err, db) {
                 })
             }
             else {
-                res.status(403).send('You dont have auth_token')
+                res.status(403).send('You dont have auth_token for /productById')
             }
         })
     })
@@ -62,7 +57,7 @@ MongoClient.connect(url, function (err, db) {
                 })
             }
             else {
-                res.status(403).send('You dont have auth_token')
+                res.status(403).send('You dont have auth_token for /productsByStoreId')
             }
         })
     })
@@ -75,7 +70,7 @@ MongoClient.connect(url, function (err, db) {
                 })
             }
             else {
-                res.status(403).send('You dont have auth_token')
+                res.status(403).send('You dont have auth_token for /10CheapestProducts')
             }
         })
     })
@@ -87,7 +82,7 @@ MongoClient.connect(url, function (err, db) {
                 })
             }
             else {
-                res.status(403).send('You dont have auth_token')
+                res.status(403).send('You dont have auth_token for /productsByTitle')
             }
         })
     })

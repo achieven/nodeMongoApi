@@ -3,6 +3,7 @@ var expect = require('chai').expect
 var mongodb = require('mongodb')
 var MongoClient = mongodb.MongoClient
 var ObjectID = mongodb.ObjectID
+var sha256 = require('js-sha256').sha256
 
 var url = 'mongodb://localhost:27017/test';
 describe('getProductById', function () {
@@ -10,7 +11,7 @@ describe('getProductById', function () {
         MongoClient.connect(url, function (err, db) {
             util.getProductById(db, 'some id that doesnt exist', function (status, param) {
                 expect(status).to.be.equal(200)
-                expect(param.length).to.be.equal(0)
+                expect(param).to.be.equal('No product with such id exists')
                 db.close()
                 done()
             })
@@ -23,14 +24,14 @@ describe('getProductById', function () {
                 products.insert({_id: objId, name: 'some name'})
                 util.getProductById(db, 1234, function (status, param) {
                     expect(status).to.be.equal(200)
-                    expect(param.length).to.be.equal(0)
+                    expect(param).to.be.equal('No product with such id exists')
                     products.remove({_id: objId, name: 'some name'})
 
 
                     products.insert({_id: 1234, name: 'some name'})
                     util.getProductById(db, ObjectID(1234), function (status, param) {
                         expect(status).to.be.equal(200)
-                        expect(param.length).to.be.equal(0)
+                        expect(param).to.be.equal('No product with such id exists')
                         products.remove({_id: 1234, name: 'some name'})
                         db.close()
                         done()
@@ -133,49 +134,53 @@ describe('get10CheapestProducts', function () {
     it('should return the 10 cheapest products and ignore prices or shipping which are either not integers or parseInt(price/shipping) is not an integer', function (done) {
         MongoClient.connect(url, function (err, db) {
             db.collection('products', function (err, products) {
-                products.drop()
-                products.insert({price: 1, shipping: 0})
-                products.insert({price: 2, shipping: 0})
-                products.insert({price: '3', shipping: 0})
-                products.insert({price: 6, shipping: 0})
-                products.insert({price: 4, shipping: 0})
-                products.insert({price: '5', shipping: 0})
-                products.insert({price: '7', shipping: 0})
-                products.insert({price: '10', shipping: 0})
-                products.insert({price: '8', shipping: 0})
-                products.insert({price: 0, shipping: 0})
-                products.insert({price: '9', shipping: 0})
-                products.insert({price: undefined, shipping: 0})
-                products.insert({price: null, shipping: 0})
-                products.insert({price: -1, shipping: 0})
-                products.insert({price: Symbol(), shipping: 0})
+                var pricesAndShippings = [
+                    {price: 1, shipping: 0},
+                    {price: 2, shipping: 0},
+                    {price: '3', shipping: 0},
+                    {price: 6, shipping: 0},
+                    {price: 4, shipping: 0},
+                    {price: '5', shipping: 0},
+                    {price: '7', shipping: 0},
+                    {price: '10', shipping: 0},
+                    {price: '8', shipping: 0},
+                    {price: 0, shipping: 0},
+                    {price: '9', shipping: 0},
+                    {price: undefined, shipping: 0},
+                    {price: null, shipping: 0},
+                    {price: -1, shipping: 0},
+                    {price: Symbol(), shipping: 0}
+                ]
+                pricesAndShippings.forEach(function(product){
+                    products.insert(product)
+                })
                 util.get10CheapestProducts(db, function (status, param) {
                     expect(status).to.be.equal(200)
                     expect(param.length).to.be.equal(10)
                     expect(param[0].price).to.be.equal(0)
+                    expect(param[0].shipping).to.be.equal(0)
                     expect(param[1].price).to.be.equal(1)
+                    expect(param[1].shipping).to.be.equal(0)
                     expect(param[2].price).to.be.equal(2)
+                    expect(param[2].shipping).to.be.equal(0)
                     expect(param[3].price).to.be.equal('3')
+                    expect(param[3].shipping).to.be.equal(0)
                     expect(param[4].price).to.be.equal(4)
+                    expect(param[4].shipping).to.be.equal(0)
                     expect(param[5].price).to.be.equal('5')
+                    expect(param[5].shipping).to.be.equal(0)
                     expect(param[6].price).to.be.equal(6)
+                    expect(param[6].shipping).to.be.equal(0)
                     expect(param[7].price).to.be.equal('7')
+                    expect(param[7].shipping).to.be.equal(0)
                     expect(param[8].price).to.be.equal('8')
+                    expect(param[8].shipping).to.be.equal(0)
                     expect(param[9].price).to.be.equal('9')
+                    expect(param[9].shipping).to.be.equal(0)
 
-                    products.remove({price: 1})
-                    products.remove({price: 2})
-                    products.remove({price: '3'})
-                    products.remove({price: 6})
-                    products.remove({price: 4})
-                    products.remove({price: '5'})
-                    products.remove({price: '7'})
-                    products.remove({price: '8'})
-                    products.remove({price: 0})
-                    products.remove({price: undefined})
-                    products.remove({price: null})
-                    products.remove({price: -1})
-                    products.remove({price: Symbol()})
+                    pricesAndShippings.forEach(function(product){
+                        products.remove(product)
+                    })
                     done()
 
                 })
@@ -185,20 +190,25 @@ describe('get10CheapestProducts', function () {
     it('should return less than 10 products if no 10 products with valid prices exist', function (done) {
         MongoClient.connect(url, function (err, db) {
             db.collection('products', function (err, products) {
-                products.drop()
-                products.insert({price: 1, shipping: '7'})
-                products.insert({price: 2, shipping: '8'})
-                products.insert({price: '3', shipping: 9})
-                products.insert({price: 6, shipping: 0})
-                products.insert({price: 4, shipping: '3'})
-                products.insert({price: '5'})
-                products.insert({price: '7', shipping: Symbol()})
-                products.insert({price: '8', shipping: 13})
-                products.insert({price: 0, shipping: 11})
-                products.insert({price: undefined, shipping: '5'})
-                products.insert({price: null, shipping: '5'})
-                products.insert({price: -1, shipping: '5'})
-                products.insert({price: Symbol(), shipping: '5'})
+
+                var pricesAndShippings = [
+                    {price: 1, shipping: '7'},
+                    {price: 2, shipping: '8'},
+                    {price: '3', shipping: 9},
+                    {price: 6, shipping: 0},
+                    {price: 4, shipping: '3'},
+                    {price: '5'},
+                    {price: '7', shipping: Symbol()},
+                    {price: '8', shipping: 13},
+                    {price: 0, shipping: 11},
+                    {price: undefined, shipping: '5'},
+                    {price: null, shipping: '5'},
+                    {price: -1, shipping: '5'},
+                    {price: Symbol(), shipping: '5'}
+                    ]
+                pricesAndShippings.forEach(function(product){
+                    products.insert(product)
+                })
                 util.get10CheapestProducts(db, function (status, param) {
                     expect(status).to.be.equal(200)
                     expect(param.length).to.be.equal(7)
@@ -216,20 +226,10 @@ describe('get10CheapestProducts', function () {
                     expect(param[5].shipping).to.be.equal(9)
                     expect(param[6].price).to.be.equal('8')
                     expect(param[6].shipping).to.be.equal(13)
-
-                    products.remove({price: 1, shipping: '7'})
-                    products.remove({price: 2, shipping: '8'})
-                    products.remove({price: '3', shipping: 9})
-                    products.remove({price: 6, shipping: 0})
-                    products.remove({price: 4, shipping: '3'})
-                    products.remove({price: '5'})
-                    products.remove({price: '7', shipping: Symbol()})
-                    products.remove({price: '8', shipping: 13})
-                    products.remove({price: 0, shipping: 10})
-                    products.remove({price: undefined, shipping: '5'})
-                    products.remove({price: null, shipping: '5'})
-                    products.remove({price: -1, shipping: '5'})
-                    products.remove({price: Symbol(), shipping: '5'})
+                    
+                    pricesAndShippings.forEach(function(product){
+                        products.remove(product)
+                    })
                     done()
 
                 })
@@ -357,10 +357,10 @@ describe('verifyAuthToken', function () {
     it('should return true if cookies have the needed token', function (done) {
         MongoClient.connect(url, function (err, db) {
             db.collection('auth_tokens', function (err, tokens) {
-                tokens.insert({auth_token: 'some auth token'})
-                util.verifyAuthCookie(db, {auth_token: "some auth token"}, function (authorized) {
+                tokens.insert({auth_token: sha256('some auth token')})
+                util.verifyAuthCookie(db, {auth_token: 'some auth token'}, function (authorized) {
                     expect(authorized).to.be.true
-                    tokens.remove({auth_token: 'some auth token'})
+                    tokens.remove({auth_token: sha256('some auth token')})
                     done()
                 })
             })

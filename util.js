@@ -1,3 +1,5 @@
+var sha256 = require('js-sha256').sha256
+
 module.exports = {
     getProductById: function (db, id, callback) {
         db.collection('products', function (err, products) {
@@ -9,7 +11,7 @@ module.exports = {
                     callback(200, chosenProductArray[0])
                 }
                 else if (chosenProductArray.length === 0) {
-                    callback(200, [])
+                    callback(200, 'No product with such id exists')
                 }
                 else {
                     callback(500, 'some problem occured')
@@ -69,7 +71,7 @@ module.exports = {
                 if (auth_token.length === 0) {
                     callback(false)
                 }
-                else if(cookies && cookies.auth_token === auth_token[0].auth_token){
+                else if(cookies && cookies.auth_token && sha256(cookies.auth_token) === auth_token[0].auth_token){
                     callback(true)
                 }
                 else {
