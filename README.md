@@ -6,5 +6,5 @@ open browser at localhost:3000
 
 To run tests:
 npm i
-npm i mocha -g
+npm i mocha -g (of you dont have mocha installed)
 mocha
