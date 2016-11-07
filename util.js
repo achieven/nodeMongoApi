@@ -63,11 +63,20 @@ module.exports = {
             })
         })
     },
-    verifyAuthCookie: function(cookies){
-        const auth_token = 'some_authentication_cookie'
-        if(cookies && cookies.auth_token === auth_token){
-            return true
-        }
-        return false
+    verifyAuthCookie: function(db,cookies, callback){
+        db.collection('auth_tokens', function(err, tokens){
+            tokens.find().toArray(function (err, auth_token) {
+                if (auth_token.length === 0) {
+                    callback(false)
+                }
+                else if(cookies && cookies.auth_token === auth_token[0].auth_token){
+                    callback(true)
+                }
+                else {
+                    callback(false)
+                }
+            })
+        })
+        
     }
 }

@@ -338,18 +338,33 @@ describe('getProductsByTitle', function () {
     })
 })
 
-describe('verifyAuthToken', function(){
-    it('should return false if cookies dont have token or is not identical to auth_token', function(){
-        var ans = util.verifyAuthCookie()
-        expect(ans).to.be.false
-        ans = util.verifyAuthCookie({})
-        expect(ans).to.be.false
-        ans = util.verifyAuthCookie({auth_token: "some not true token"})
-        expect(ans).to.be.false
+describe('verifyAuthToken', function () {
+
+    it('should return false if cookies dont have token or is not identical to auth_token', function (done) {
+        MongoClient.connect(url, function (err, db) {
+            util.verifyAuthCookie(db, undefined, function (authorized) {
+                expect(authorized).to.be.false
+                util.verifyAuthCookie(db, {}, function (authorized) {
+                    expect(authorized).to.be.false
+                    util.verifyAuthCookie(db, {auth_token: "some not true token"}, function (authorized) {
+                        expect(authorized).to.be.false
+                        done()
+                    })
+                })
+            })
+        })
     })
-    it('should return true if cookies have the needed token', function(){
-        var ans = util.verifyAuthCookie({auth_token: "some_authentication_cookie"})
-        expect(ans).to.be.true
+    it('should return true if cookies have the needed token', function (done) {
+        MongoClient.connect(url, function (err, db) {
+            db.collection('auth_tokens', function (err, tokens) {
+                tokens.insert({auth_token: 'some auth token'})
+                util.verifyAuthCookie(db, {auth_token: "some auth token"}, function (authorized) {
+                    expect(authorized).to.be.true
+                    tokens.remove({auth_token: 'some auth token'})
+                    done()
+                })
+            })
+        })
     })
 })
 
