@@ -45,10 +45,27 @@
 
         </div>
     </div>
+    <div class="row">
+        <div class="col-xs-2">
+            <label for="">Get products by title:</label>
+        </div>
+        <div class="col-xs-2">
+            <input type="text" placeholder="Insert title here" class="getProductByTitleInput">
+        </div>
+        <div class="col-xs-2">
+            <button type="submit" class="btn btn-info getProductByTitlePartial"> Partial</button>
+        </div>
+        <div class="col-xs-2">
+            <button type="submit" class="btn btn-info getProductByTitleExact"> Exact</button>
+        </div>
+        <div class="col-xs-4 getProductByTitleResult">
+
+        </div>
+    </div>
 </div>
 
 <script>
-    function getAuthToken(){
+    function getAuthToken() {
         var auth_token = document.cookie.split(';')
                 .map(function (cookie) {
                     var cookieName = cookie.split('=')[0].trim(), cookieValue = cookie.split('=')[1].trim()
@@ -70,10 +87,10 @@
             type: 'get',
             url: '/productById?id=' + id,
             contentType: 'application/json',
-            success: function(message){
+            success: function (message) {
                 $('.getProductByIdResult').text(JSON.stringify(message))
             },
-            error: function(error){
+            error: function (error) {
                 $('.getProductByIdResult').text(error.responseText)
             }
         })
@@ -84,12 +101,12 @@
         var store_id = $('.getProductsByStoreIdInput').val()
         $.ajax({
             type: 'get',
-            url: '/productsByStoreId?store_id=' +  store_id,
+            url: '/productsByStoreId?store_id=' + store_id,
             contentType: 'application/json',
-            success: function(message){
+            success: function (message) {
                 $('.getProductsByStoreIdResult').text(JSON.stringify(message))
             },
-            error: function(error){
+            error: function (error) {
                 $('.getProductsByStoreIdResult').text(error.responseText)
             }
         })
@@ -99,11 +116,37 @@
         $.ajax({
             type: 'get',
             url: '/10CheapestProducts',
-            success: function(message){
+            success: function (message) {
                 $('.get10CheapestProductsResult').text(JSON.stringify(message))
             },
-            error: function(error){
+            error: function (error) {
                 $('.get10CheapestProductsResult').text(error.responseText)
+            }
+        })
+    })
+    $('.getProductByTitlePartial').on('click', function (e) {
+        e.preventDefault()
+        $.ajax({
+            type: 'get',
+            url: '/productsByTitle?partialOrExact=partial&title=' + $('.getProductByTitleInput').val(),
+            success: function (message) {
+                $('.getProductByTitleResult').text(JSON.stringify(message))
+            },
+            error: function (error) {
+                $('.getProductByTitleResult').text(error.responseText)
+            }
+        })
+    })
+    $('.getProductByTitleExact').on('click', function (e) {
+        e.preventDefault()
+        $.ajax({
+            type: 'get',
+            url: '/productsByTitle?partialOrExact=exact&title=' + $('.getProductByTitleInput').val(),
+            success: function (message) {
+                $('.getProductByTitleResult').text(JSON.stringify(message))
+            },
+            error: function (error) {
+                $('.getProductByTitleResult').text(error.responseText)
             }
         })
     })
